@@ -1,0 +1,258 @@
+#####1.Dla sekwencji DNA wylicz jej tzw. GC-conent.Wylicz częstotliwości występowania zasad (ACGT) w sekwencjach DNA. Program powinien przyjmować na
+wejściu dowolną liczbę sekwencji i wypisać zbiorczą statystykę (po jednej kolumnie na sekwencję)
+
+import fileinput 
+first=1 
+stats=dict()
+for line in fileinput.input():
+    line=line.rstrip().upper ()
+    if first and line.startswith('>'):
+       seq=line 
+       first=0 
+       stats=dict()
+    elif line.startswith('>'):
+       print(seq)
+       sum=0
+       for k,v in stats.items():
+           print(f'{k}:{v}')
+           sum+=v
+       if ('G' in stats) and ('C' in stats):
+          gcRatio=100*(stats['G']+stats['C'])/sum
+          print(f'GC Ratio:{gcRatio]')
+    else:
+        for elem in line:
+           if elem in stats:
+              stats[elem]+=1
+           else:
+              stats[elem]=1
+if not first:
+   print(seq)
+   sum=0.0
+   for k,v in stats.items():
+       print(f'{k}:{v}')
+       sum+=v
+   if ('G'in stats) and ('C' in stats):
+      gcRatio=100*(stats['G']+stats['C'])/sum
+      print(f'GC Ratio:{gcRatio]')
+
+####2.Wygeneruj tzw. dotplot dla dwóch sekwencji  –tj. macierz pokazującą podobieństwo sekwencji na poszczególnych pozycjach.
+
+import fileinput
+import sys
+import matplotlib
+import matplotlib as mlt
+import matplotlib.pyplot as plt
+import numpy as np
+
+sek1 = []
+sek2 = []
+
+pierwszy = 1
+stats=dict()
+file_name = open(sys.argv[1], 'rt')
+
+for line in file_name:
+    line=line.rstrip().upper()
+    if pierwszy and not line.startswith('>'):
+        for el in line:
+            sek1.append(el)
+        pierwszy = 0          
+    else:
+        if not line.startswith('>'):
+            for el in line:
+                sek2.append(el)       
+ 
+macierz = np.zeros(shape=(len(sek1), len(sek2)))
+for el in range (0, len(sek1)):
+    for el1 in range (0, len(sek2)):
+        if sek1[el] == sek2[el1]:
+            macierz[el][el1] = 1
+        else:
+            macierz[el][el1] = 0
+print(macierz)
+
+fig, ax = plt.subplots()
+im = ax.imshow(macierz)
+
+ax.set_xticks(np.arange(len(sek2)), labels=sek2)
+ax.set_yticks(np.arange(len(sek1)), labels=sek1)
+
+plt.setp(ax.get_xticklabels(), rotation=0, ha="right", rotation_mode="anchor")
+
+ax.set_title("dotplot")
+fig.tight_layout()
+plt.show()
+
+########3.Dla pliku PDB wylicz częstotliwość występowania aminokwasów w podanym modelu i/lub łańcuchu.
+
+import sys
+def read_lines_with_ATOM(a):
+f = open(a, 'r')
+Lines = []
+for line in f.readlines():
+ if line[0:4] == "ATOM":
+  x = line.rstrip()
+  Lines.append(x)
+ f.close()
+ return Lines
+def extracting_particular_fields(Lines):
+ Aminoacids = []
+ for i in Lines:
+  x = i.split()
+  y = x[3:6]
+  Aminoacids.append(y)
+ return Aminoacids
+def removing_unnecessary_lines(Aminoacids):
+ Lines_final = []
+ counter = int(Aminoacids[0][2])
+ for i in Aminoacids:
+  if i[2] != counter:
+   Lines_final.append(i)
+   counter =i[2]
+   continue
+ return Lines_final
+def counting_amino_acids(Lines_final):
+Amino_acid_dictionary = { 'ALA' : 0, 'ARG' : 0, 'ASP' : 0, 'ASN' : 0, 'CYS' : 0, 'GLU' : 0, 'GLN' : 0, 'GLY' : 0, 'HIS' : 0, 'ILE' : 0, 'LEU' : 0, 'LYS' : 0, 
+'MET' : 0, 'PHE' : 0, 'PRO' : 0, 'SER' : 0, 'THR' : 0, 'TRP' : 0, 'TYR' : 0, 'VAL' : 0}
+Amino_variable = ""
+for i in Lines_final:
+ Amino_variable = i[0]
+ Amino_acid_dictionary[Amino_variable] += 1
+return Amino_acid_dictionary
+
+Lines = read_lines_with_ATOM(sys.argv[1])
+for i in Lines:
+ print(i)
+print("----------------------------")
+Aminoacids = extracting_particular_fields(Lines)
+for i in Aminoacids:
+ print(i)
+print("----------------------------")
+Lines_final = removing_unnecessary_lines(Aminoacids)
+for i in Lines_final:
+ print(i)
+print("----------------------------")
+Amino_acid_dictionary = counting_amino_acids(Lines_final)
+print(Amino_acid_dictionary)
+
+######4.Wylicz statystyki kodonów i aminokwasów dla danych sekwencji kodujących. Dla każdego aminokwasu przedstaw statystyki kodujących go kodonów.
+
+"""Wylicz statystyki kodonów i aminokwasów dla danych sekwencji kodujących. Dla
+każdego aminokwasu przedstaw statystyki kodujących go kodonów."""
+import sys
+import re
+from textwrap import wrap
+AA_dictionary = {
+ 'ALA': 0, 'ARG': 0, 'ASP': 0, 'ASN': 0, 'CYS': 0, 'GLU': 0, 'GLN': 0, 'GLY': 0, 'HIS': 0, 'ILE': 0, 'LEU': 0, 'LYS': 0, 'MET': 0, 'PHE': 0, 'PRO': 0, 
+ 'SER': 0, 'THR': 0, 'TRP': 0, 'TYR': 0, 'VAL': 0, 'STOP': 0}
+Codons_dictionary = {
+ 'TTT' : 'PHE', 'TTC' : 'PHE',
+ 'TTA' : 'LEU', 'TTG' : 'LEU', 'CTT' : 'LEU', 'CTC' : 'LEU', 'CTA' : 'LEU', 'CTG' : 'LEU',
+ 'ATT' : 'ILE', 'ATC' : 'ILE', 'ATA' : 'ILE',
+ 'ATG' : 'MET',
+ 'GTT' : 'VAL', 'GTC' : 'VAL', 'GTA' : 'VAL', 'GTG' : 'VAL',
+ 'TCT' : 'SER', 'TCC' : 'SER', 'TCA' : 'SER', 'TCG' : 'SER',
+ 'CCT' : 'PRO', 'CCC' : 'PRO', 'CCA' : 'PRO', 'CCG' : 'PRO',
+ 'ACT' : 'THR', 'ACC' : 'THR', 'ACA' : 'THR', 'ACG' : 'THR',
+ 'GCT' : 'ALA', 'GCC' : 'ALA', 'GCA' : 'ALA', 'GCG' : 'ALA',
+ 'TAT' : 'TYR', 'TAC' : 'TYR',
+ 'TAA' : 'STOP', 'TAG' : 'STOP',
+ 'CAT' : 'HIS', 'CAC' : 'HIS',
+ 'CAA' : 'GLN', 'CAG' : 'GLN',
+ 'AAT' : 'ASN', 'AAC' : 'ASN',
+ 'AAA' : 'LYS', 'AAG' : 'LYS',
+ 'GAT' : 'ASP', 'GAC' : 'ASP',
+ 'GAA' : 'GLU', 'GAG' : 'GLU',
+ 'TGT' : 'CYS', 'TGC' : 'CYS',
+ 'TGA' : 'STOP',
+ 'TGG' : 'TRP',
+ 'CGT' : 'ARG', 'CGC' : 'ARG', 'CGA' : 'ARG', 'CGG' : 'ARG',
+ 'AGT' : 'SER', 'AGC' : 'SER',
+ 'AGA' : 'ARG', 'AGG' : 'ARG',
+ 'GGT' : 'GLY', 'GGC' : 'GLY', 'GGA' : 'GLY', 'GGG' : 'GLY'}
+Codons_dictionary_counter = {
+ 'TTT' : [0,'PHE'], 'TTC' : [0,'PHE'],
+ 'TTA' : [0,'LEU'], 'TTG' : [0,'LEU'], 'CTT' : [0,'LEU'], 'CTC' : [0,'LEU'], 'CTA' : [0,'LEU'], 'CTG' : [0,'LEU'],
+ 'ATT' : [0,'ILE'], 'ATC' : [0,'ILE'], 'ATA' : [0,'ILE'],
+ 'ATG' : [0,'MET'], 
+ 'GTT' : [0,'VAL'], 'GTC' : [0,'VAL'], 'GTA' : [0,'VAL'], 
+ 'GTG' : [0,'VAL'], 
+ 'TCT' : [0,'SER'], 'TCC' : [0,'SER'], 'TCA' : [0,'SER'], 'TCG' : [0,'SER'],
+ 'CCT' : [0,'PRO'], 'CCC' : [0,'PRO'], 'CCA' : [0,'PRO'], 'CCG' : [0,'PRO'],
+ 'ACT' : [0,'THR'], 'ACC' : [0,'THR'], 'ACA' : [0,'THR'], 'ACG' : [0,'THR'],
+ 'GCT' : [0,'ALA'], 'GCC' : [0,'ALA'], 'GCA' : [0,'ALA'], 'GCG' : [0,'ALA'],
+ 'TAT' : [0,'TYR'], 'TAC' : [0,'TYR'],
+ 'TAA' : [0,'STOP'], 'TAG' : [0,'STOP'],
+ 'CAT' : [0,'HIS'], 'CAC' : [0,'HIS'],
+ 'CAA' : [0,'GLN'], 'CAG' : [0,'GLN'],
+ 'AAT' : [0,'ASN'], 'AAC' : [0,'ASN'],
+ 'AAA' : [0,'LYS'], 'AAG' : [0,'LYS'],
+ 'GAT' : [0,'ASP'], 'GAC' : [0,'ASP'],
+ 'GAA' : [0,'GLU'], 'GAG' : [0,'GLU'],
+ 'TGT' : [0,'CYS'], 'TGC' : [0,'CYS'],
+ 'TGA' : [0,'STOP'],
+ 'TGG' : [0,'TRP'],
+ 'CGT' : [0,'ARG'], 'CGC' : [0,'ARG'], 'CGA' : [0,'ARG'], 'CGG' : [0,'ARG'],
+ 'AGT' : [0,'SER'], 'AGC' : [0,'SER'],
+ 'AGA' : [0,'ARG'], 'AGG' : [0,'ARG'],
+ 'GGT' : [0,'GLY'], 'GGC' : [0,'GLY'], 'GGA' : [0,'GLY'],'GGG' : [0,'GLY']}
+DNA_sequence = ""
+f = open(sys.argv[1], 'r')
+for line in f.readlines():
+ if line[0] != ">":
+        DNA_sequence += line
+
+DNA = DNA_sequence.strip()
+print(DNA)
+matches = re.findall(r'ATG(?:...)*?(?:TAA|TAG|TGA)', DNA)
+for i in range(0,len(matches)):
+ x = wrap(matches[i],3)
+ print(x)
+ for a in x:
+       Codons_dictionary_counter[a][0] += 1
+       a = Codons_dictionary[a]
+       AA_dictionary[a] +=1
+print(Codons_dictionary_counter)
+print(AA_dictionary)
+
+6.Wylicz mapy kontaktów dla łańcuchów polipeptydowych (białek) i RNA.
+
+"""Odczytanie linijek po ATOM"""
+import sys
+import math
+def read_lines(sek1):    
+  f = open(sek1, 'r')
+  Lines = []
+  for line in f.readlines():
+   x = line.split()
+   if x[0] == "ATOM" and x[2] == "CA":
+    Lines.append(x)
+  f.close()
+  return Lines
+def create_matrix(sek1, sek2):
+ x = max(len(sek1), len(sek2))
+ matrix = [[0 for i in range(x)] for y in range(x)]
+ return matrix
+
+Lines_sek1 = read_lines(sys.argv[1])
+Lines_sek2 = read_lines(sys.argv[2])
+Map = create_matrix(Lines_sek1,Lines_sek2)
+credibility = 7
+for i in Lines_sek1:
+ print(i)
+ print("----------")
+for i in Lines_sek2:
+ print(i)
+ x = min(len(Lines_sek1), len(Lines_sek2))
+for i in range(x):
+ x1 = float(Lines_sek1[i][6])
+ x2 = float(Lines_sek2[i][6])
+ y1 = float(Lines_sek1[i][7])
+ y2 = float(Lines_sek2[i][7])
+ z1 = float(Lines_sek1[i][8])
+ z2 = float(Lines_sek2[i][8])
+ AB = (x2-x1) ** 2 + (y2-y1) ** 2 + (z2-z1) ** 2
+ distance = math.sqrt(AB)
+ if distance < credibility:
+  Map[i][i] = 1
+ print(Map)
